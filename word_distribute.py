@@ -16,9 +16,17 @@ def count_first_char(words):
         for c in chars[:20]:
             f.write(f"{c[0]} {c[1]}\n")
     
-    run_test(chars[:20])
+    run_test_more_times(chars[:20])
     
 def run_test(chars):
+    with open("test_first_char.txt", "w") as f:
+        for c in chars:
+            cmd = f"./test_common --bench CPY s {c[0]} | grep 'searched prefix ' | grep -Eo '[0-9]+\.[0-9]+'"
+            output = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            data = output.communicate()[0].decode("utf-8").replace('\\n', '')
+            f.write(f"{c[0]} {data}")
+
+def run_test_more_times(chars):
     ten_times = {}
     for i in range(10):
         subprocess.Popen("echo 3 | sudo tee /proc/sys/vm/drop_caches", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -30,7 +38,7 @@ def run_test(chars):
             data = output.communicate()[0].decode("utf-8").replace('\n', '')
             ten_times[c[0]].append(data)
 
-    with open("test_first_char.txt", "w") as f:
+    with open("test_10_times_first_char.txt", "w") as f:
         for c, v in ten_times.items():
             f.write(f"{c[0]}")
             for data in v:
